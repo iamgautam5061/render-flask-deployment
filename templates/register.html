@@ -4,14 +4,15 @@
     <title>Register</title>
     <link rel="stylesheet" href="/static/style.css">
     <script>
+        // Check if email already exists
         async function checkDuplicate(event) {
-            event.preventDefault(); // stop form submit
+            event.preventDefault(); // stop form submission
             const form = event.target;
             const emailInput = document.getElementById('email').value;
 
             try {
-                let response = await fetch(`/check-email?email=${encodeURIComponent(emailInput)}`);
-                let result = await response.json();
+                const response = await fetch(`/check-email?email=${encodeURIComponent(emailInput)}`);
+                const result = await response.json();
 
                 if (result.exists) {
                     alert("This email is already registered! Please use another.");
@@ -23,6 +24,8 @@
                 console.error("Error checking email:", error);
                 form.submit(); // fallback
             }
+
+            return false;
         }
     </script>
 </head>
@@ -30,7 +33,7 @@
     <div class="container">
         <h2>Register</h2>
 
-        <!-- Show flash messages from Flask -->
+        <!-- Flash messages from Flask -->
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             <ul>
@@ -44,10 +47,26 @@
         <form method="POST" onsubmit="checkDuplicate(event)">
             Name: <input type="text" name="name" required><br>
             Email: <input type="email" id="email" name="email" required><br>
-            Password: <input type="password" name="password" required><br>
+            Password: <input type="password" id="password" name="password" required><br>
+            <div>
+                <input type="checkbox" id="showPassword">
+                <label for="showPassword">Show Password</label>
+            </div>
             <button type="submit">Register</button>
         </form>
+
         Already have an account? <a href="/login">Login</a>
     </div>
+
+    <script>
+        // Show/hide password toggle
+        const passwordInput = document.getElementById('password');
+        const showPasswordCheckbox = document.getElementById('showPassword');
+
+        showPasswordCheckbox.addEventListener('change', function() {
+            passwordInput.type = this.checked ? 'text' : 'password';
+        });
+    </script>
 </body>
 </html>
+
