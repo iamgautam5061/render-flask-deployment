@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, make_response, jsonify
 from flask_mysqldb import MySQL
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -7,26 +7,31 @@ import csv
 import io
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"  # Change this in production!
+app.secret_key = "your_secret_key"  # ⚠️ Change this in production!
 
-# MySQL config
+# ✅ MySQL config for Railway
 app.config['MYSQL_HOST'] = 'tramway.proxy.rlwy.net'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'veasjsZXIxOBeHWXKodBwWxEyZAZEwsQ'
 app.config['MYSQL_DB'] = 'railway'
+app.config['MYSQL_PORT'] = 15619   # 🚨 Needed for Railway
 
 mysql = MySQL(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+
+# ------------------------
 # User class for Flask-Login
+# ------------------------
 class User(UserMixin):
     def __init__(self, id, name, email, password):
         self.id = id
         self.name = name
         self.email = email
         self.password = password
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -38,12 +43,19 @@ def load_user(user_id):
         return User(id=user[0], name=user[1], email=user[2], password=user[3])
     return None
 
+
+# ------------------------
 # Routes
+# ------------------------
+
 @app.route("/")
 def home():
     return render_template("index.html")
 
+
+# ------------------------
 # Register
+# ------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -71,9 +83,10 @@ def register():
 
     return render_template("register.html")
 
-from flask import jsonify
 
+# ------------------------
 # AJAX route to check email availability
+# ------------------------
 @app.route("/check-email")
 def check_email():
     email = request.args.get("email")
@@ -84,7 +97,9 @@ def check_email():
     return jsonify({"exists": bool(user)})
 
 
+# ------------------------
 # Login
+# ------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -105,7 +120,10 @@ def login():
 
     return render_template("login.html")
 
+
+# ------------------------
 # Dashboard
+# ------------------------
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -138,7 +156,10 @@ def dashboard():
         spent_dict=spent_dict
     )
 
+
+# ------------------------
 # Add expense
+# ------------------------
 @app.route("/add-expense", methods=["GET", "POST"])
 @login_required
 def add_expense():
@@ -161,7 +182,10 @@ def add_expense():
 
     return render_template("add_expense.html")
 
+
+# ------------------------
 # Set or update budget
+# ------------------------
 @app.route("/set-budget", methods=["GET", "POST"])
 @login_required
 def set_budget():
@@ -184,7 +208,10 @@ def set_budget():
 
     return render_template("set_budget.html")
 
+
+# ------------------------
 # Reports
+# ------------------------
 @app.route("/reports", methods=["GET", "POST"])
 @login_required
 def reports():
@@ -212,7 +239,10 @@ def reports():
         values=values
     )
 
+
+# ------------------------
 # Export CSV report
+# ------------------------
 @app.route("/export/<string:month>")
 @login_required
 def export_report(month):
@@ -238,13 +268,20 @@ def export_report(month):
     response.headers["Content-Type"] = "text/csv"
     return response
 
+
+# ------------------------
 # Logout
+# ------------------------
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("login"))
 
+
+# ------------------------
+# Run App
+# ------------------------
 if __name__ == "__main__":
     app.run(debug=True)
 
