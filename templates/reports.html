@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Reports</h2>
+
+<form method="POST">
+    <label>Select Month:</label>
+    <input type="month" name="month" value="{{ selected_month }}">
+    <button type="submit">Show</button>
+</form>
+
+<div class="chart-container" style="max-width:500px; margin:auto;">
+    <canvas id="reportChart"></canvas>
+</div>
+
+<br>
+<a href="/export/{{ selected_month }}">⬇ Download CSV</a>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('reportChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ labels|tojson }},
+            datasets: [{
+                data: {{ values|tojson }},
+                backgroundColor: ["#FF6384","#36A2EB","#FFCE56","#4CAF50","#FF9800"]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+</script>
+{% endblock %}
