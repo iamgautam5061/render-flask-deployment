@@ -22,9 +22,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 
-# ------------------------
-# User class for Flask-Login
-# ------------------------
+# ---------------- USER CLASS ---------------- #
 class User(UserMixin):
     def __init__(self, id, name, email, password):
         self.id = id
@@ -44,18 +42,14 @@ def load_user(user_id):
     return None
 
 
-# ------------------------
-# Routes
-# ------------------------
+# ---------------- ROUTES ---------------- #
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
-# ------------------------
-# Register
-# ------------------------
+# ----------- REGISTER ----------- #
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -84,22 +78,20 @@ def register():
     return render_template("register.html")
 
 
-# ------------------------
-# AJAX route to check email availability
-# ------------------------
+# ----------- CHECK EMAIL (AJAX) ----------- #
 @app.route("/check-email")
 def check_email():
     email = request.args.get("email")
+
     cur = mysql.connection.cursor()
     cur.execute("SELECT id FROM users WHERE email=%s", (email,))
     user = cur.fetchone()
     cur.close()
+
     return jsonify({"exists": bool(user)})
 
 
-# ------------------------
-# Login
-# ------------------------
+# ----------- LOGIN ----------- #
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -121,9 +113,7 @@ def login():
     return render_template("login.html")
 
 
-# ------------------------
-# Dashboard
-# ------------------------
+# ----------- DASHBOARD ----------- #
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -157,9 +147,7 @@ def dashboard():
     )
 
 
-# ------------------------
-# Add expense
-# ------------------------
+# ----------- ADD EXPENSE ----------- #
 @app.route("/add-expense", methods=["GET", "POST"])
 @login_required
 def add_expense():
@@ -168,6 +156,10 @@ def add_expense():
         category = request.form.get("category")
         note = request.form.get("note")
         date = request.form.get("date")
+
+        if not date:  # 🚨 Validate date
+            flash("Please enter a date for the expense.", "danger")
+            return redirect(url_for("add_expense"))
 
         cur = mysql.connection.cursor()
         cur.execute(
@@ -183,9 +175,7 @@ def add_expense():
     return render_template("add_expense.html")
 
 
-# ------------------------
-# Set or update budget
-# ------------------------
+# ----------- SET OR UPDATE BUDGET ----------- #
 @app.route("/set-budget", methods=["GET", "POST"])
 @login_required
 def set_budget():
@@ -200,23 +190,26 @@ def set_budget():
         if existing:
             cur.execute("UPDATE budgets SET amount=%s WHERE id=%s", (amount, existing[0]))
         else:
-            cur.execute("INSERT INTO budgets (user_id, category, amount) VALUES (%s, %s, %s)", (current_user.id, category, amount))
+            cur.execute(
+                "INSERT INTO budgets (user_id, category, amount) VALUES (%s, %s, %s)",
+                (current_user.id, category, amount)
+            )
 
         mysql.connection.commit()
         cur.close()
+
         return redirect(url_for("dashboard"))
 
     return render_template("set_budget.html")
 
 
-# ------------------------
-# Reports
-# ------------------------
+# ----------- REPORTS ----------- #
 @app.route("/reports", methods=["GET", "POST"])
 @login_required
 def reports():
     cur = mysql.connection.cursor()
     now = datetime.datetime.now()
+
     selected_month = request.form.get("month", now.strftime("%Y-%m"))
     year, month = selected_month.split("-")
 
@@ -240,9 +233,7 @@ def reports():
     )
 
 
-# ------------------------
-# Export CSV report
-# ------------------------
+# ----------- EXPORT CSV REPORT ----------- #
 @app.route("/export/<string:month>")
 @login_required
 def export_report(month):
@@ -269,9 +260,7 @@ def export_report(month):
     return response
 
 
-# ------------------------
-# Logout
-# ------------------------
+# ----------- LOGOUT ----------- #
 @app.route("/logout")
 @login_required
 def logout():
@@ -279,9 +268,7 @@ def logout():
     return redirect(url_for("login"))
 
 
-# ------------------------
-# Run App
-# ------------------------
+# ---------------- RUN ---------------- #
 if __name__ == "__main__":
     app.run(debug=True)
 
