@@ -10,10 +10,10 @@ app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Change this in production!
 
 # MySQL config
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'tracker_user'
-app.config['MYSQL_PASSWORD'] = 'password123'
-app.config['MYSQL_DB'] = 'expense_tracker'
+app.config['MYSQL_HOST'] = 'tramway.proxy.rlwy.net'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'veasjsZXIxOBeHWXKodBwWxEyZAZEwsQ'
+app.config['MYSQL_DB'] = 'railway'
 
 mysql = MySQL(app)
 bcrypt = Bcrypt(app)
@@ -247,3 +247,4 @@ def logout():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
